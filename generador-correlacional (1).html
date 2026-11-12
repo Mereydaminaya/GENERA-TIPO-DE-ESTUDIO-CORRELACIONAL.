@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generador Correlacional</title>
+<style>
+:root{
+  --bg:#f6f4ef; --card:#ffffff; --ink:#1f2328; --muted:#5f6670; --line:#e2ddd2;
+  --accent:#7a2e1f; --accent-soft:#f4e7e2; --ok:#2f6b3a; --ph:#b4561f;
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16171a; --card:#1f2125; --ink:#e9e6df; --muted:#a3a7ad; --line:#33363c;
+    --accent:#e39a7f; --accent-soft:#3a2721; --ok:#7fc28c; --ph:#f0a46c; --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16171a; --card:#1f2125; --ink:#e9e6df; --muted:#a3a7ad; --line:#33363c;
+  --accent:#e39a7f; --accent-soft:#3a2721; --ok:#7fc28c; --ph:#f0a46c; --shadow:none;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 16px 60px}
+header h1{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:28px;margin:0 0 4px}
+header p{margin:0;color:var(--muted)}
+h2{font-family:Georgia,"Times New Roman",serif;font-size:19px;margin:0 0 12px}
+h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:var(--shadow);margin-top:18px}
+.step{display:inline-block;font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.authors{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.author{border:1.5px solid var(--line);border-radius:10px;padding:14px;cursor:pointer;background:transparent;color:inherit;text-align:left;font:inherit}
+.author:hover{border-color:var(--accent)}
+.author[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.author b{display:block;font-family:Georgia,serif;font-size:16px}
+.author span{font-size:13px;color:var(--muted)}
+.posture{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px;font-size:14px}
+.posture div{border-left:3px solid var(--accent-soft);padding-left:10px}
+.posture strong{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--accent)}
+.posture ul{margin:4px 0 0;padding-left:18px}
+.src{font-size:12px;color:var(--muted);margin-top:10px}
+details summary{cursor:pointer;color:var(--accent);font-weight:600;margin-top:12px}
+table.cmp{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+table.cmp th,table.cmp td{border:1px solid var(--line);padding:7px 8px;vertical-align:top;text-align:left}
+table.cmp th{background:var(--accent-soft)}
+.cmpwrap{overflow-x:auto;max-width:100%;width:100%}
+details{max-width:100%;overflow:hidden}
+#out{overflow-wrap:anywhere}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+label{display:block;font-size:13px;font-weight:600;margin:10px 0 4px}
+input[type=text],select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+input[type=text]:focus,select:focus{outline:2px solid var(--accent);outline-offset:0}
+.row{display:flex;gap:8px;align-items:center}
+.row select.art{width:84px;flex:none}
+.row input{flex:1}
+.dim{margin-top:6px}
+.btn{border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.small{padding:4px 10px;font-size:13px}
+.x{border:none;background:transparent;color:var(--muted);font-size:18px;cursor:pointer;width:30px;flex:none}
+.x:hover{color:var(--accent)}
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 16px}
+.chk{display:flex;gap:8px;align-items:flex-start;font-weight:400;margin-top:12px}
+.chk input{margin-top:4px}
+.hint{font-size:12px;color:var(--muted);margin-top:3px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.toolbar .msg{color:var(--ok);font-size:13px;font-weight:600}
+#out{font-family:"Times New Roman",Times,serif;font-size:12pt;line-height:1.5;color:var(--ink)}
+#out h4{font-size:12pt;font-weight:700;margin:16px 0 4px}
+#out p{margin:0 0 6px;text-align:justify}
+#out ol{margin:0 0 6px;padding-left:28px}
+#out li{margin-bottom:4px;text-align:justify}
+#out .tit{text-align:center;font-weight:700;font-size:13pt;margin-bottom:10px}
+#out table{border-collapse:collapse;width:100%;font-size:11pt;margin-top:6px}
+#out th,#out td{border:1px solid var(--muted);padding:5px;vertical-align:top;text-align:left}
+#out th{background:var(--accent-soft)}
+.ph{color:var(--ph);font-weight:700}
+.note{font-size:13px;background:var(--accent-soft);border-radius:8px;padding:8px 10px;margin-top:10px}
+@media (max-width:820px){
+  .authors,.grid,.posture,.opts{grid-template-columns:1fr}
+  header h1{font-size:23px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Generador de investigación correlacional</h1>
+  <p>Problemas, objetivos e hipótesis según Vara-Horna (2015), Hernández-Sampieri y Mendoza (2018) o Villanueva (2020).</p>
+</header>
+
+<section class="card">
+  <div class="step">Paso 1</div>
+  <h2>Elige el autor</h2>
+  <div class="authors" id="authors">
+    <button class="author" data-a="vara" aria-pressed="true"><b>Arístides Vara Horna</b><span>7 pasos para elaborar una tesis (2015)</span></button>
+    <button class="author" data-a="sampieri" aria-pressed="false"><b>Hernández-Sampieri</b><span>Metodología de la investigación: Las rutas… (2018)</span></button>
+    <button class="author" data-a="villanueva" aria-pressed="false"><b>Luis Villanueva Benites</b><span>Diseño del proyecto e informe de investigación (2020)</span></button>
+  </div>
+
+  <h3>Qué plantea este autor sobre la investigación correlacional</h3>
+  <div id="posture" class="posture"></div>
+  <div id="postureSrc" class="src"></div>
+
+  <details>
+    <summary>Comparar a los tres autores</summary>
+    <div class="cmpwrap"><table class="cmp" id="cmp"></table></div>
+  </details>
+</section>
+
+<section class="card">
+  <div class="step">Paso 2</div>
+  <h2>Variables y dimensiones</h2>
+  <div class="grid">
+    <div id="v1box"></div>
+    <div id="v2box"></div>
+  </div>
+  <p class="hint">El artículo (el, la, los, las) se propone solo. Cámbialo si no corresponde.</p>
+</section>
+
+<section class="card">
+  <div class="step">Paso 3</div>
+  <h2>Contexto del estudio</h2>
+  <div class="grid">
+    <div>
+      <label>Organización</label>
+      <div class="row"><select class="art" id="orgArt"></select><input type="text" id="org" placeholder="Municipalidad Provincial de Huaraz"></div>
+      <label>Población (unidades de estudio)</label>
+      <div class="row"><select class="art" id="pobArt"></select><input type="text" id="pob" placeholder="trabajadores administrativos"></div>
+      <label>Cómo se une la población con la organización</label>
+      <select id="conn">
+        <option value="de">… de la organización</option>
+        <option value="que laboran en">… que laboran en la organización</option>
+        <option value="atendidos por">… atendidos por la organización</option>
+        <option value="en">… en la organización</option>
+      </select>
+    </div>
+    <div>
+      <label>Lugar</label>
+      <input type="text" id="lugar" placeholder="Huaraz">
+      <label>Año</label>
+      <input type="text" id="anio" placeholder="2026">
+      <label>Estudio (título)</label>
+      <input type="text" id="titulo" placeholder="Se genera solo si lo dejas vacío">
+      <div class="hint">Vara recomienda que el título diga el qué (variables), el quién (sujetos) y el dónde (lugar).</div>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="step">Paso 4</div>
+  <h2>Opciones de redacción</h2>
+  <div class="opts" id="opts"></div>
+</section>
+
+<section class="card">
+  <div class="step">Resultado</div>
+  <div class="toolbar">
+    <h2 style="margin:0;flex:1">Planteamiento generado</h2>
+    <button class="btn ghost" id="copy">Copiar</button>
+    <button class="btn" id="dl">Descargar Word</button>
+    <span class="msg" id="msg"></span>
+  </div>
+  <div id="out" style="margin-top:14px"></div>
+</section>
+</div>
+
+<script>
+/* ===================== POSTURAS DE LOS AUTORES ===================== */
+const AUT = {
+  vara:{
+    nombre:"Arístides Vara Horna (2015)",
+    ref:"Vara-Horna, A. A. (2015). <i>7 pasos para elaborar una tesis</i>. Empresa Editora Macro.",
+    refTxt:"Vara-Horna, A. A. (2015). 7 pasos para elaborar una tesis. Empresa Editora Macro.",
+    src:"Fuente: Vara (2015), Paso 2 (Ej. 19–21, estructura de la hipótesis), Paso 3 (Ej. 25–26 y 29, formulación del problema y objetivos) y Paso 4 (tabla de diseños descriptivos correlacionales).",
+    post:[
+      ["Qué es","Diseño descriptivo correlacional: determina el grado de asociación entre variables. Da pistas para suponer influencias, pero no permite afirmar causa y efecto."],
+      ["Cómo se hace","Primero se mide o registra cada variable por separado y después se correlacionan. Técnicas: Pearson (r), Spearman, chi cuadrado, regresión."],
+      ["Pregunta","Interrogativa, una sola idea y delimitada (lugar, tiempo, sujetos):<ul><li>¿Existe relación entre X y Y de los [sujetos] de la empresa «X»?</li><li>¿Cuál es la relación entre X y Y…?</li></ul>"],
+      ["Problemas específicos (dos métodos)","<ul><li><b>Estructural:</b> uno por cada dimensión: ¿Existe relación entre [dimensión] y Y…?</li><li><b>Secuencial:</b> 1) ¿Cuál es el nivel de X? 2) ¿Cuál es el nivel de Y? 3) ¿Cuál es la magnitud de correlación entre X y Y?</li></ul>"],
+      ["Objetivos","Verbo en infinitivo, sin signos de interrogación: «Determinar la relación entre X y Y…»; en los específicos: «Determinar si existe relación entre [dimensión] y Y…»."],
+      ["Hipótesis","Responde a la pregunta y contesta ¿qué existe?, ¿en quién?, ¿en dónde?<ul><li>«Existe relación directa entre X y Y de los [sujetos] de la empresa X».</li><li>«A mayor X, mayor/menor será Y…» o «Y está asociado inversamente con X».</li></ul>"]
+    ]
+  },
+  sampieri:{
+    nombre:"Hernández-Sampieri y Mendoza (2018)",
+    ref:"Hernández-Sampieri, R., y Mendoza Torres, C. P. (2018). <i>Metodología de la investigación: Las rutas cuantitativa, cualitativa y mixta</i>. McGraw-Hill Interamericana Editores.",
+    refTxt:"Hernández-Sampieri, R., y Mendoza Torres, C. P. (2018). Metodología de la investigación: Las rutas cuantitativa, cualitativa y mixta. McGraw-Hill Interamericana Editores.",
+    src:"Fuente: Hernández-Sampieri y Mendoza (2018), pp. 42–44 y 55 (objetivos, preguntas y guiones), pp. 109–110 (alcance correlacional), pp. 128–129 y 133–134 (hipótesis correlacionales, nulas y alternativas), p. 141 (tipos de hipótesis).",
+    post:[
+      ["Qué es","Alcance correlacional: conocer la relación o grado de asociación entre dos o más conceptos, categorías o variables en un contexto particular. Tiene un valor explicativo parcial; cuidado con las correlaciones espurias."],
+      ["Cómo se hace","Se mide cada variable, se describe y luego se cuantifica y analiza la vinculación. La correlación puede ser positiva o negativa. Diseño no experimental transeccional correlacional-causal, cuando se limita a relaciones no causales."],
+      ["Pregunta","Guiones del autor (con lugar, tiempo y perfil de los casos):<ul><li>¿Habrá una relación entre ___ y ___?</li><li>¿A mayor ___, mayor ___?</li><li>¿A mayor ___, menor ___?</li></ul>"],
+      ["Objetivos","Empiezan con un verbo de acción: determinar, analizar, examinar, relacionar… Guion: «Determinar si existe una relación entre la (el) ___ y la (el) ___»."],
+      ["Hipótesis correlacionales","Bivariadas o multivariadas, y con dirección o sin ella:<ul><li>Con dirección: «A mayor X, mayor Y» o «A mayor X, menor Y».</li><li>Sin dirección: «X está relacionada con Y».</li></ul>El orden de las variables no importa y no se habla de variable independiente ni dependiente."],
+      ["Nula, alternativa y estadística","Ho niega la relación («X no está relacionada con Y»). Ha solo se formula si hay otra posibilidad real. Las hipótesis estadísticas traducen la Hi a símbolos (r<sub>xy</sub>)."]
+    ]
+  },
+  villanueva:{
+    nombre:"Luis A. Villanueva Benites (2020)",
+    ref:"Villanueva Benites, L. A. (2020). <i>Diseño del proyecto e informe de investigación: Una aplicación a las ciencias empresariales</i>. Universidad Nacional Santiago Antúnez de Mayolo.",
+    refTxt:"Villanueva Benites, L. A. (2020). Diseño del proyecto e informe de investigación: Una aplicación a las ciencias empresariales. Universidad Nacional Santiago Antúnez de Mayolo.",
+    src:"Fuente: Villanueva (2020), pp. 24–25 (formas de redactar el problema), pp. 41–46 (hipótesis correlacionales, nulas, generales y específicas), pp. 55–58 (objetivos), p. 62 (tipo correlacional), pp. 66 y 72 (diseño transeccional correlacional).",
+    post:[
+      ["Qué es","Tipo correlacional (o relacional): mide el nivel de relación o asociación no causal entre dos o más variables. La correlación puede ser positiva, negativa o espuria."],
+      ["Diseño","No experimental, transeccional y descriptivo-correlacional: no se manipulan variables, los datos se recogen una sola vez y se describen las variables y su relación. No hay variable independiente ni dependiente."],
+      ["Pregunta","Fórmulas del nivel correlacional:<ul><li>¿Qué relación existe entre…?</li><li>¿Cuál es la relación que se da entre…?</li><li>¿Cómo se relaciona X con Y…?</li><li>¿Cómo se vincula A con B…?</li></ul>"],
+      ["Objetivos","Uno por cada problema, con los mismos elementos de la pregunta: «Determinar la relación entre…», «Establecer la vinculación entre…», «Determinar la asociación entre…»."],
+      ["Hipótesis","General: «Existe una relación positiva entre X y Y del personal de…, año…». Específicas: una por cada dimensión, derivadas de la general («Hay una relación positiva entre [dimensión] y Y…»; «[dimensión] y Y… se relacionan positivamente»)."],
+      ["Nula y estadística","H0 es el reverso: «No existe una relación directa entre X y Y…». Entre las hipótesis estadísticas incluye las de correlación. Se usan Pearson o Spearman según el nivel de medición."]
+    ]
+  }
+};
+
+const CMP = [
+  ["","Vara (2015)","Hernández-Sampieri (2018)","Villanueva (2020)"],
+  ["Nombre del tipo","Descriptivo correlacional","Alcance correlacional","Tipo correlacional o relacional; diseño descriptivo-correlacional"],
+  ["Diseño","No experimental; mide cada variable y luego correlaciona","No experimental transeccional correlacional-causal (sin causalidad)","No experimental, transeccional, descriptivo-correlacional"],
+  ["Pregunta general","¿Existe relación entre X y Y…?","¿Habrá una relación entre X y Y? / ¿A mayor X, mayor Y?","¿Cómo se relaciona X con Y…? / ¿Qué relación existe entre…?"],
+  ["Específicos","Estructural (por dimensión) o secuencial (nivel X, nivel Y, magnitud)","Una por cada par de variables o dimensiones","Uno por cada dimensión de la variable"],
+  ["Objetivo","Determinar (si existe) la relación entre…","Determinar si existe una relación entre…","Determinar la relación / Establecer la vinculación entre…"],
+  ["Hipótesis","Existe relación directa entre X y Y de [quién] en [dónde]","A mayor X, mayor/menor Y; o X se relaciona con Y","Existe una relación positiva entre X y Y…"],
+  ["Nula / alternativa","No la desarrolla para este tipo","Ho niega; Ha solo si hay otra opción real","H0 es el reverso de la Hi"]
+];
+
+/* ===================== UTILIDADES DE LENGUAJE ===================== */
+const MASC_EXC=['sistema','problema','clima','programa','tema','día','mapa','idioma','esquema','diagrama','corazón','buzón','camión','avión','análisis','marketing','énfasis'];
+const FEM_EXC=['imagen','gestión','base','calle','gente','clase','fuente','red','salud','actitud','mente','parte','sede','suerte','llave','fe','ley','piel','sangre','leche','frase','crisis','tesis','hipótesis'];
+function guessArt(name){
+  const w=(name||'').trim().split(/\s+/)[0].toLowerCase();
+  if(!w) return 'el';
+  if(MASC_EXC.includes(w)) return 'el';
+  if(FEM_EXC.includes(w)) return 'la';
+  if(/s$/.test(w) && !/(is|és|ás|ís|ós|ús)$/.test(w)){
+    return /(as|des|iones|ones)$/.test(w)?'las':'los';
+  }
+  if(/(a|ión|ón|dad|tad|tud|ud|umbre|ez|ie)$/.test(w)) return 'la';
+  return 'el';
+}
+const lowerFirst=s=>{ if(!s) return s; if(s.length>1 && /[A-ZÁÉÍÓÚÑ]/.test(s[1])) return s; return s[0].toLowerCase()+s.slice(1); };
+const cap=s=> s? s[0].toUpperCase()+s.slice(1) : s;
+// marca de texto pendiente
+const PH=t=>`⟦${t}⟧`;
+function bare(x){ return x.name? lowerFirst(x.name.trim()) : PH(x.ph); }
+function np(x){ const b=bare(x); return x.art? x.art+' '+b : b; }
+function de(s){ return s.startsWith('el ')? 'del '+s.slice(3) : 'de '+s; }
+function joinY(a,b){ return a+(/^(i|hi)[^aeiouáéíóú]/i.test(b.replace(/^(el|la|los|las) /,'').trim()) && !/^(el|la|los|las) /.test(b)?' e ':' y ')+b; }
+
+/* ===================== ESTADO ===================== */
+const S={
+  autor:'vara',
+  v1:{name:'',art:'el',auto:true,ph:'variable 1',dims:[]},
+  v2:{name:'',art:'el',auto:true,ph:'variable 2',dims:[]},
+};
+function newDim(n){ return {name:'',art:'la',auto:true,ph:'dimensión '+n}; }
+S.v1.dims=[newDim(1),newDim(2),newDim(3)];
+S.v2.dims=[newDim(1),newDim(2),newDim(3)];
+
+const ARTS=['el','la','los','las',''];
+function artOptions(sel){ return ARTS.map(a=>`<option value="${a}" ${a===sel?'selected':''}>${a||'(ninguno)'}</option>`).join(''); }
+
+/* ===================== UI VARIABLES ===================== */
+function renderVar(key){
+  const v=S[key], box=document.getElementById(key+'box'), n=key==='v1'?1:2;
+  box.innerHTML=`
+    <h3 style="margin-top:0">Variable ${n}</h3>
+    <div class="row"><select class="art" data-k="${key}" data-i="-1">${artOptions(v.art)}</select>
+    <input type="text" data-k="${key}" data-i="-1" value="${esc(v.name)}" placeholder="${n===1?'Clima organizacional':'Desempeño laboral'}"></div>
+    <label>Dimensiones de la variable ${n}</label>
+    ${v.dims.map((d,i)=>`
+      <div class="row dim"><select class="art" data-k="${key}" data-i="${i}">${artOptions(d.art)}</select>
+      <input type="text" data-k="${key}" data-i="${i}" value="${esc(d.name)}" placeholder="Dimensión ${i+1}">
+      <button class="x" title="Quitar dimensión" data-del="${key}" data-i="${i}">×</button></div>`).join('')}
+    <button class="btn ghost small" style="margin-top:8px" data-add="${key}">+ Agregar dimensión</button>`;
+}
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.dataset.k){
+    const v=S[t.dataset.k], i=+t.dataset.i, obj=i<0?v:v.dims[i];
+    if(t.tagName==='INPUT'){
+      obj.name=t.value;
+      if(obj.auto){ obj.art=guessArt(t.value); const s=t.parentNode.querySelector('select'); s.value=obj.art; }
+    } else { obj.art=t.value; obj.auto=false; }
+  }
+  if(t.id==='org'&&ctxAuto.org){ $('#orgArt').value=guessArt(t.value); }
+  if(t.id==='pob'&&ctxAuto.pob){ $('#pobArt').value=guessArt(t.value); }
+  if(t.id==='orgArt') ctxAuto.org=false;
+  if(t.id==='pobArt') ctxAuto.pob=false;
+  generate();
+});
+document.addEventListener('change',e=>{ if(e.target.tagName==='SELECT'||e.target.type==='checkbox') generate(); });
+document.addEventListener('click',e=>{
+  const t=e.target;
+  if(t.dataset.add){ const v=S[t.dataset.add]; v.dims.push(newDim(v.dims.length+1)); renderVar(t.dataset.add); generate(); }
+  if(t.dataset.del){ const v=S[t.dataset.del]; v.dims.splice(+t.dataset.i,1); v.dims.forEach((d,i)=>d.ph='dimensión '+(i+1)); renderVar(t.dataset.del); generate(); }
+  const a=t.closest('.author');
+  if(a){ S.autor=a.dataset.a; document.querySelectorAll('.author').forEach(b=>b.setAttribute('aria-pressed',b===a)); renderPosture(); renderOpts(); generate(); }
+});
+const $=s=>document.querySelector(s);
+const ctxAuto={org:true,pob:true};
+
+/* ===================== POSTURA ===================== */
+function renderPosture(){
+  const A=AUT[S.autor];
+  $('#posture').innerHTML=A.post.map(([t,c])=>`<div><strong>${t}</strong>${c}</div>`).join('');
+  $('#postureSrc').textContent=A.src;
+}
+function renderCmp(){
+  $('#cmp').innerHTML=CMP.map((r,i)=>'<tr>'+r.map(c=>i===0?`<th>${c}</th>`:`<td>${c}</td>`).join('')+'</tr>').join('').replace(/<tr><td>([^<]*)<\/td>/g,'<tr><th>$1</th>');
+}
+
+/* ===================== OPCIONES POR AUTOR ===================== */
+function sel(id,label,opts,hint){
+  return `<div><label for="${id}">${label}</label><select id="${id}">${opts.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select>${hint?`<div class="hint">${hint}</div>`:''}</div>`;
+}
+function chk(id,label,on){ return `<div><label class="chk"><input type="checkbox" id="${id}" ${on?'checked':''}> ${label}</label></div>`; }
+function renderOpts(){
+  const a=S.autor; let h='';
+  h+=sel('dir','Dirección de la relación',[['pos','Directa / positiva'],['neg','Inversa / negativa'],['nodir','Sin dirección (solo relación)']]);
+  h+=sel('cruce','Qué se relaciona en los específicos',[['d1v2','Dimensiones de V1 con V2'],['d2v1','V1 con dimensiones de V2'],['ambos','Ambas combinaciones'],['dxd','Cada dimensión de V1 con cada una de V2']]);
+  h+=sel('medida','Nivel de medición de los datos',[['ordinal','Ordinal (escala Likert)'],['intervalo','Intervalo o razón (normal)'],['nominal','Nominal (categorías)']],'Define la prueba estadística sugerida.');
+  if(a==='vara'){
+    h+=sel('metodo','Método para los específicos (Vara)',[['estructural','Estructural: uno por dimensión'],['secuencial','Secuencial: nivel V1, nivel V2, magnitud'],['mixto','Mixto: niveles + dimensiones']]);
+    h+=sel('vpreg','Forma de la pregunta',[['existe','¿Existe relación entre…?'],['cual','¿Cuál es la relación entre…?']]);
+    h+=sel('vhip','Forma de la hipótesis general',[['existe','Existe relación directa entre…'],['amayor','A mayor X, mayor será Y…']]);
+    h+=sel('niv1','Nivel esperado de V1 (secuencial)',[['alto','alto'],['medio','medio'],['bajo','bajo']]);
+    h+=sel('niv2','Nivel esperado de V2 (secuencial)',[['alto','alto'],['medio','medio'],['bajo','bajo']]);
+  }
+  if(a==='villanueva'){
+    h+=sel('vform','Fórmula de la pregunta general',[['como','¿Cómo se relaciona X con Y…?'],['que','¿Qué relación existe entre…?'],['cual','¿Cuál es la relación que se da entre…?'],['vincula','¿Cómo se vincula X con Y…?']]);
+    h+=chk('varia','Alternar las fórmulas en los específicos (como en los ejemplos del autor)',true);
+  }
+  if(a==='sampieri'){
+    h+=sel('sform','Guion de la pregunta',[['habra','¿Habrá una relación entre…?'],['existe','¿Existe una relación entre…?'],['amayor','¿A mayor X, mayor/menor Y…?']]);
+    h+=sel('sverb','Verbo del objetivo',[['determinar','Determinar si existe una relación entre…'],['analizar','Analizar si hay una relación entre…'],['examinar','Examinar la relación entre…']]);
+    h+=chk('ha','Incluir hipótesis alternativa (Ha), solo si hay dirección',true);
+  }
+  h+=chk('ctxsp','Repetir lugar y año en los específicos',a==='vara');
+  h+=chk('h0','Incluir hipótesis nulas',a!=='vara');
+  if(a!=='vara') h+=chk('est','Incluir hipótesis estadísticas (r<sub>xy</sub>)',false);
+  h+=chk('mat','Incluir matriz de consistencia',true);
+  $('#opts').innerHTML=h;
+}
+const val=id=>{ const e=document.getElementById(id); return e? (e.type==='checkbox'?e.checked:e.value) : undefined; };
+
+/* ===================== GENERADOR ===================== */
+function generate(){
+  const A=S.autor, dir=val('dir');
+  const V1=S.v1, V2=S.v2;
+  const org={name:$('#org').value,art:$('#orgArt').value,ph:'organización'};
+  const pob={name:$('#pob').value,art:$('#pobArt').value,ph:'población'};
+  const conn=$('#conn').value;
+  const lugar=$('#lugar').value.trim()||PH('lugar'), anio=$('#anio').value.trim()||PH('año');
+  const orgS=org.name? (org.art?org.art+' ':'')+org.name.trim() : PH('organización');
+  const pobS=np(pob);
+  const link= conn==='de'? de(orgS) : conn+' '+orgS;
+  const pre = A==='sampieri'? 'en '+pobS : de(pobS);
+  const ctxShort = pre+' '+link;
+  const ctxFull = ctxShort+', '+lugar+', '+anio;
+  const ctxSp = val('ctxsp')? ctxFull : ctxShort;
+  const v1=np(V1), v2=np(V2);
+
+  // pares de específicos
+  const dims1=V1.dims, dims2=V2.dims, cr=val('cruce'); let pairs=[];
+  if(cr==='d1v2'||cr==='ambos') dims1.forEach(d=>pairs.push([d,V2]));
+  if(cr==='d2v1'||cr==='ambos') dims2.forEach(d=>pairs.push([V1,d]));
+  if(cr==='dxd') dims1.forEach(a=>dims2.forEach(b=>pairs.push([a,b])));
+
+  const R={pe:[],oe:[],he:[],h0e:[],extra:[]};
+  const mm = dir==='neg'?'menor':'mayor';
+
+  if(A==='vara'){
+    const rel={pos:'relación directa',neg:'relación inversa',nodir:'relación'}[dir];
+    const qStart=val('vpreg')==='cual'?'¿Cuál es la relación entre ':'¿Existe relación entre ';
+    R.pg=`${qStart}${v1} y ${v2} ${ctxFull}?`;
+    R.og=`Determinar la relación entre ${v1} y ${v2} ${ctxFull}.`;
+    R.hg=(val('vhip')==='amayor'&&dir!=='nodir')
+      ? `A mayor ${bare(V1)}, ${mm} será ${v2} ${ctxFull}.`
+      : `Existe ${rel} entre ${v1} y ${v2} ${ctxFull}.`;
+    R.h0g=`No existe ${rel} entre ${v1} y ${v2} ${ctxFull}.`;
+    const m=val('metodo');
+    const nivelItems=()=>{
+      [[V1,val('niv1')],[V2,val('niv2')]].forEach(([V,n])=>{
+        R.pe.push(`¿Cuál es el nivel de ${bare(V)} ${ctxSp}?`);
+        R.oe.push(`Identificar el nivel de ${bare(V)} ${ctxSp}.`);
+        R.he.push(`El nivel de ${bare(V)} ${ctxSp} es ${n}.`);
+        R.h0e.push(`El nivel de ${bare(V)} ${ctxSp} no es ${n}.`);
+      });
+    };
+    if(m==='secuencial'){
+      nivelItems();
+      R.pe.push(`¿Cuál es la magnitud de correlación entre ${v1} y ${v2} ${ctxSp}?`);
+      R.oe.push(`Determinar la magnitud de correlación entre ${v1} y ${v2} ${ctxSp}.`);
+      const adj={pos:'directa y significativa',neg:'inversa y significativa',nodir:'significativa'}[dir];
+      R.he.push(`La correlación entre ${v1} y ${v2} ${ctxSp} es ${adj}.`);
+      R.h0e.push(`La correlación entre ${v1} y ${v2} ${ctxSp} no es significativa.`);
+    } else {
+      if(m==='mixto') nivelItems();
+      pairs.forEach(([a,b])=>{
+        const x=np(a), y=np(b);
+        R.pe.push(`${qStart}${x} y ${y} ${ctxSp}?`);
+        R.oe.push(`Determinar si existe relación entre ${x} y ${y} ${ctxSp}.`);
+        R.he.push(`Existe ${rel} entre ${x} y ${y} ${ctxSp}.`);
+        R.h0e.push(`No existe ${rel} entre ${x} y ${y} ${ctxSp}.`);
+      });
+    }
+    R.dis=`Investigación de diseño descriptivo correlacional (no experimental). Según Vara (2015), primero se mide o registra cada variable por separado y después se correlacionan; el diseño permite suponer relaciones, pero no demostrar causa y efecto.`;
+  }
+
+  if(A==='villanueva'){
+    const F={
+      que:(a,b)=>`¿Qué relación existe entre ${a} y ${b}`,
+      cual:(a,b)=>`¿Cuál es la relación que se da entre ${a} y ${b}`,
+      como:(a,b)=>`¿Cómo se relaciona ${a} con ${b}`,
+      vincula:(a,b)=>`¿Cómo se vincula ${a} con ${b}`
+    };
+    const rel={pos:'una relación positiva',neg:'una relación negativa',nodir:'una relación significativa'}[dir];
+    const adv={pos:'positivamente',neg:'negativamente',nodir:'significativamente'}[dir];
+    const f=val('vform');
+    R.pg=`${F[f](v1,v2)} ${ctxFull}?`;
+    R.og=(f==='vincula'?`Establecer la vinculación entre ${v1} y ${v2}`:`Determinar la relación entre ${v1} y ${v2}`)+` ${ctxFull}.`;
+    R.hg=`Existe ${rel} entre ${v1} y ${v2} ${ctxFull}.`;
+    R.h0g=`No existe ${rel} entre ${v1} y ${v2} ${ctxFull}.`;
+    const cyc=['como','que','cual','vincula'], vary=val('varia');
+    pairs.forEach(([a,b],i)=>{
+      const x=np(a), y=np(b), k=vary?cyc[i%4]:f;
+      R.pe.push(`${F[k](x,y)} ${ctxSp}?`);
+      R.oe.push(k==='vincula'?`Establecer la vinculación entre ${x} y ${y} ${ctxSp}.`:(vary&&i%2? `Establecer la relación entre ${x} y ${y} ${ctxSp}.`:`Determinar la relación entre ${x} y ${y} ${ctxSp}.`));
+      const hs=[`Existe ${rel} entre ${x} y ${y} ${ctxSp}.`,`Hay ${rel} entre ${x} y ${y} ${ctxSp}.`,`${cap(x)} y ${y} ${ctxSp} se relacionan ${adv}.`];
+      R.he.push(vary?hs[i%3]:hs[0]);
+      R.h0e.push(`No existe ${rel} entre ${x} y ${y} ${ctxSp}.`);
+    });
+    R.dis=`El diseño será no experimental, transeccional y descriptivo-correlacional. No experimental, porque no se manipularán las variables; transeccional, porque los datos se recolectarán en un solo momento; y descriptivo-correlacional, porque se describirán las variables y la relación o asociación entre ellas (Villanueva, 2020). Al tratarse de una hipótesis correlacional, no se distingue variable independiente ni dependiente.`;
+  }
+
+  if(A==='sampieri'){
+    const sf=(val('sform')==='amayor'&&dir==='nodir')?'habra':val('sform');
+    const Q=(a,b,A2,B2,c)=> sf==='amayor'? `¿A mayor ${A2}, ${mm} ${B2} ${c}?` : `¿${sf==='habra'?'Habrá':'Existe'} una relación entre ${a} y ${b} ${c}?`;
+    const vb=val('sverb');
+    const O=(a,b,c)=> vb==='analizar'?`Analizar si hay una relación entre ${a} y ${b} ${c}.`: vb==='examinar'?`Examinar la relación entre ${a} y ${b} ${c}.`:`Determinar si existe una relación entre ${a} y ${b} ${c}.`;
+    const H=(a,b,A2,B2,c)=> dir==='nodir'? `${cap(a)} se relaciona con ${b} ${c}.` : `A mayor ${A2}, ${mm} ${B2} ${c}.`;
+    const H0=(a,b,c)=> `${cap(a)} no se relaciona con ${b} ${c}.`;
+    const HA=(A2,B2,c)=> `A mayor ${A2}, ${dir==='neg'?'mayor':'menor'} ${B2} ${c}.`;
+    R.pg=Q(v1,v2,bare(V1),bare(V2),ctxFull);
+    R.og=O(v1,v2,ctxFull);
+    R.hg=H(v1,v2,bare(V1),bare(V2),ctxFull);
+    R.h0g=H0(v1,v2,ctxFull);
+    if(val('ha')&&dir!=='nodir') R.hag=HA(bare(V1),bare(V2),ctxFull);
+    pairs.forEach(([a,b])=>{
+      const x=np(a), y=np(b);
+      R.pe.push(Q(x,y,bare(a),bare(b),ctxSp));
+      R.oe.push(O(x,y,ctxSp));
+      R.he.push(H(x,y,bare(a),bare(b),ctxSp));
+      R.h0e.push(H0(x,y,ctxSp));
+    });
+    R.dis=`Estudio de alcance correlacional con diseño no experimental transeccional correlacional, limitado a relaciones no causales. Primero se mide y describe cada variable y después se cuantifica y analiza su vinculación (Hernández-Sampieri y Mendoza, 2018). En la hipótesis correlacional no se habla de variable independiente ni dependiente.`;
+  }
+
+  // estadístico sugerido
+  const md=val('medida');
+  R.stat = md==='ordinal'? 'Coeficiente de correlación rho de Spearman (variables ordinales, por ejemplo escalas Likert).'
+         : md==='intervalo'? 'Coeficiente de correlación r de Pearson (variables de intervalo o razón con distribución normal); si no hay normalidad, rho de Spearman.'
+         : 'Chi cuadrado y coeficiente de contingencia (variables nominales).';
+  if(A!=='vara' && val('est')){
+    const sym = dir==='pos'?'> 0':dir==='neg'?'< 0':'≠ 0';
+    R.estG=[`Hi: r(xy) ${sym}`,`Ho: r(xy) = 0`];
+  }
+  R.titulo = $('#titulo').value.trim() || `${cap(bare(V1))} y ${bare(V2)} ${A==='sampieri'?'':'en '}${A==='sampieri'?ctxShort:pobS+' '+link}, ${lugar}, ${anio}`;
+  R.h0on=val('h0'); R.mat=val('mat');
+  window.LAST=R;
+  renderOut(R);
+}
+
+/* ===================== SALIDA EN PANTALLA ===================== */
+const phHTML=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/⟦([^⟧]*)⟧/g,'<span class="ph">[$1]</span>');
+const plain=s=>s.replace(/⟦([^⟧]*)⟧/g,'[$1]');
+function blocks(R){
+  // estructura común para pantalla, portapapeles y Word
+  const B=[];
+  B.push({t:'title',x:R.titulo});
+  B.push({t:'p',x:'Autor de referencia: '+AUT[S.autor].nombre});
+  B.push({t:'h',x:'Tipo y diseño de investigación'});
+  B.push({t:'p',x:R.dis});
+  B.push({t:'p',x:'Prueba estadística sugerida: '+R.stat});
+  B.push({t:'h',x:'Problema general'}); B.push({t:'p',x:R.pg});
+  B.push({t:'h',x:'Problemas específicos'}); B.push({t:'ol',x:R.pe});
+  B.push({t:'h',x:'Objetivo general'}); B.push({t:'p',x:R.og});
+  B.push({t:'h',x:'Objetivos específicos'}); B.push({t:'ol',x:R.oe});
+  B.push({t:'h',x:'Hipótesis general'});
+  B.push({t:'p',x:'Hi: '+R.hg});
+  if(R.h0on) B.push({t:'p',x:(S.autor==='sampieri'?'Ho: ':'H0: ')+R.h0g});
+  if(R.hag) B.push({t:'p',x:'Ha: '+R.hag});
+  if(R.estG) R.estG.forEach(s=>B.push({t:'p',x:'Hipótesis estadística. '+s}));
+  B.push({t:'h',x:'Hipótesis específicas'});
+  B.push({t:'ol',x:R.he.map((h,i)=>'H'+(i+1)+': '+h)});
+  if(R.h0on && R.h0e.length){ B.push({t:'h',x:'Hipótesis nulas específicas'}); B.push({t:'ol',x:R.h0e.map((h,i)=>'H0'+(i+1)+': '+h)}); }
+  if(R.mat){
+    const rows=[['General',R.pg,R.og,R.hg]];
+    R.pe.forEach((p,i)=>rows.push(['Específico '+(i+1),p,R.oe[i],R.he[i]]));
+    B.push({t:'h',x:'Matriz de consistencia (resumen)'});
+    B.push({t:'table',head:['Nivel','Problema','Objetivo','Hipótesis'],rows});
+  }
+  B.push({t:'h',x:'Referencia'});
+  B.push({t:'p',x:AUT[S.autor].refTxt,ref:true});
+  return B;
+}
+function renderOut(R){
+  const B=blocks(R); let h='';
+  B.forEach(b=>{
+    if(b.t==='title') h+=`<p class="tit">${phHTML(b.x)}</p>`;
+    if(b.t==='h') h+=`<h4>${b.x}</h4>`;
+    if(b.t==='p') h+= b.ref? `<p>${AUT[S.autor].ref}</p>` : `<p>${phHTML(b.x)}</p>`;
+    if(b.t==='ol') h+= b.x.length? `<ol>${b.x.map(s=>`<li>${phHTML(s)}</li>`).join('')}</ol>` : `<p class="note">Agrega al menos una dimensión para generar los específicos.</p>`;
+    if(b.t==='table') h+=`<table><tr>${b.head.map(c=>`<th>${c}</th>`).join('')}</tr>${b.rows.map(r=>`<tr>${r.map(c=>`<td>${phHTML(c)}</td>`).join('')}</tr>`).join('')}</table>`;
+  });
+  const pend=(JSON.stringify(R).match(/⟦/g)||[]).length;
+  if(pend) h=`<p class="note">Los textos en <span class="ph">[corchetes]</span> faltan completar.</p>`+h;
+  $('#out').innerHTML=h;
+}
+
+/* ===================== COPIAR ===================== */
+function htmlForClipboard(){
+  const B=blocks(window.LAST); const st='font-family:\'Times New Roman\';font-size:12pt;line-height:1.5';
+  let h=`<div style="${st}">`;
+  B.forEach(b=>{
+    const x=b.x&&typeof b.x==='string'?plain(b.x).replace(/</g,'&lt;'):'';
+    if(b.t==='title') h+=`<p style="${st};text-align:center;font-weight:bold">${x}</p>`;
+    if(b.t==='h') h+=`<p style="${st};font-weight:bold;margin-top:12pt">${x}</p>`;
+    if(b.t==='p') h+=`<p style="${st};text-align:justify">${b.ref?AUT[S.autor].ref:x}</p>`;
+    if(b.t==='ol') h+=`<ol style="${st}">${b.x.map(s=>`<li style="${st};text-align:justify">${plain(s).replace(/</g,'&lt;')}</li>`).join('')}</ol>`;
+    if(b.t==='table') h+=`<table border="1" cellpadding="4" style="border-collapse:collapse;${st};font-size:11pt"><tr>${b.head.map(c=>`<th>${c}</th>`).join('')}</tr>${b.rows.map(r=>`<tr>${r.map(c=>`<td>${plain(c).replace(/</g,'&lt;')}</td>`).join('')}</tr>`).join('')}</table>`;
+  });
+  return h+'</div>';
+}
+function textForClipboard(){
+  const B=blocks(window.LAST); let t='';
+  B.forEach(b=>{
+    if(b.t==='title'||b.t==='p') t+=plain(b.x)+'\n';
+    if(b.t==='h') t+='\n'+b.x.toUpperCase()+'\n';
+    if(b.t==='ol') b.x.forEach((s,i)=>t+=(i+1)+'. '+plain(s)+'\n');
+    if(b.t==='table'){ t+=b.head.join('\t')+'\n'; b.rows.forEach(r=>t+=r.map(plain).join('\t')+'\n'); }
+  });
+  return t;
+}
+function flash(m){ $('#msg').textContent=m; setTimeout(()=>$('#msg').textContent='',2500); }
+$('#copy').onclick=async()=>{
+  const html=htmlForClipboard(), txt=textForClipboard();
+  try{
+    await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([txt],{type:'text/plain'})})]);
+    flash('Copiado. Pégalo en Word.');
+  }catch(e){
+    try{
+      const d=document.createElement('div'); d.innerHTML=html; d.style.position='fixed'; d.style.left='-9999px'; document.body.appendChild(d);
+      const r=document.createRange(); r.selectNodeContents(d); const s=getSelection(); s.removeAllRanges(); s.addRange(r);
+      document.execCommand('copy'); s.removeAllRanges(); d.remove(); flash('Copiado. Pégalo en Word.');
+    }catch(e2){ flash('No se pudo copiar automáticamente.'); }
+  }
+};
+
+/* ===================== WORD (.docx real, Times New Roman 12) ===================== */
+const xe=s=>plain(String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function run(t,b){ return `<w:r>${b?'<w:rPr><w:b/></w:rPr>':''}<w:t xml:space="preserve">${xe(t)}</w:t></w:r>`; }
+function para(t,{bold=false,center=false,ind=0,hang=0,before=0,jc='both'}={}){
+  return `<w:p><w:pPr><w:spacing w:before="${before}" w:after="120" w:line="360" w:lineRule="auto"/>${ind?`<w:ind w:left="${ind}" w:hanging="${hang}"/>`:''}<w:jc w:val="${center?'center':jc}"/></w:pPr>${run(t,bold)}</w:p>`;
+}
+function cell(t,w,head){ return `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${head?'<w:shd w:val="clear" w:color="auto" w:fill="EDE4DF"/>':''}</w:tcPr><w:p><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:rPr>${head?'<w:b/>':''}<w:sz w:val="22"/></w:rPr><w:t xml:space="preserve">${xe(t)}</w:t></w:r></w:p></w:tc>`; }
+function buildDocXML(){
+  const B=blocks(window.LAST); let body='';
+  B.forEach(b=>{
+    if(b.t==='title') body+=para(b.x,{bold:true,center:true,before:0});
+    if(b.t==='h') body+=para(b.x,{bold:true,before:200,jc:'left'});
+    if(b.t==='p') body+=para(b.x);
+    if(b.t==='ol') b.x.forEach((s,i)=>body+=para((i+1)+'. '+s,{ind:425,hang:425}));
+    if(b.t==='table'){
+      const W=[1300,2600,2600,2570];
+      body+=`<w:tbl><w:tblPr><w:tblW w:w="9070" w:type="dxa"/><w:tblBorders>${['top','left','bottom','right','insideH','insideV'].map(s=>`<w:${s} w:val="single" w:sz="4" w:space="0" w:color="000000"/>`).join('')}</w:tblBorders><w:tblCellMar><w:left w:w="80" w:type="dxa"/><w:right w:w="80" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${W.map(w=>`<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>`;
+      body+=`<w:tr><w:trPr><w:tblHeader/></w:trPr>${b.head.map((c,i)=>cell(c,W[i],true)).join('')}</w:tr>`;
+      b.rows.forEach(r=>body+=`<w:tr><w:trPr><w:cantSplit/></w:trPr>${r.map((c,i)=>cell(c,W[i],false)).join('')}</w:tr>`);
+      body+='</w:tbl>'+para('');
+    }
+  });
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1418" w:right="1418" w:bottom="1418" w:left="1418" w:header="709" w:footer="709" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+}
+const STYLES=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:eastAsia="Times New Roman" w:cs="Times New Roman"/><w:sz w:val="24"/><w:szCs w:val="24"/><w:lang w:val="es-PE"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="120" w:line="360" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style></w:styles>`;
+const CT=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>`;
+const RELS=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
+const DOCRELS=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`;
+
+// ZIP mínimo (sin compresión)
+const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(b){let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=CRC[(c^b[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function zip(files){
+  const enc=new TextEncoder(), parts=[], central=[]; let off=0;
+  files.forEach(([name,txt])=>{
+    const nb=enc.encode(name), data=enc.encode(txt), c=crc32(data);
+    const h=new DataView(new ArrayBuffer(30));
+    h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);
+    h.setUint16(10,0,true);h.setUint16(12,0x21,true);h.setUint32(14,c,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);
+    h.setUint16(26,nb.length,true);h.setUint16(28,0,true);
+    parts.push(new Uint8Array(h.buffer),nb,data);
+    const d=new DataView(new ArrayBuffer(46));
+    d.setUint32(0,0x02014b50,true);d.setUint16(4,20,true);d.setUint16(6,20,true);d.setUint16(8,0x0800,true);d.setUint16(10,0,true);
+    d.setUint16(12,0,true);d.setUint16(14,0x21,true);d.setUint32(16,c,true);d.setUint32(20,data.length,true);d.setUint32(24,data.length,true);
+    d.setUint16(28,nb.length,true);d.setUint32(42,off,true);
+    central.push(new Uint8Array(d.buffer),nb);
+    off+=30+nb.length+data.length;
+  });
+  const cs=central.reduce((s,a)=>s+a.length,0);
+  const e=new DataView(new ArrayBuffer(22));
+  e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cs,true);e.setUint32(16,off,true);
+  return new Blob([...parts,...central,new Uint8Array(e.buffer)],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+}
+function makeDocx(){
+  return zip([['[Content_Types].xml',CT],['_rels/.rels',RELS],['word/document.xml',buildDocXML()],['word/_rels/document.xml.rels',DOCRELS],['word/styles.xml',STYLES]]);
+}
+$('#dl').onclick=()=>{
+  const blob=makeDocx(), a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='Investigacion_correlacional_'+S.autor+'.docx';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  flash('Documento Word descargado.');
+};
+
+/* ===================== INICIO ===================== */
+$('#orgArt').innerHTML=artOptions('la');
+$('#pobArt').innerHTML=artOptions('los');
+renderVar('v1'); renderVar('v2'); renderPosture(); renderCmp(); renderOpts(); generate();
+</script>
+</body>
+</html>
